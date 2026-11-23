@@ -73,7 +73,12 @@ public abstract class AbstractIntegrationTest {
 
     /** Logs in through the real endpoint; tokens are cached per user for the whole test run. */
     protected String tokenFor(TestUsers user) {
-        return TOKENS.computeIfAbsent(user, this::login);
+        return TOKENS.computeIfAbsent(user, seeded -> login(seeded.username(), seeded.password()));
+    }
+
+    /** Logs in a user created by the test itself (not cached: its id changes between tests). */
+    protected RequestPostProcessor asUser(String username, String password) {
+        return bearer(login(username, password));
     }
 
     protected RequestPostProcessor as(TestUsers user) {
@@ -91,17 +96,17 @@ public abstract class AbstractIntegrationTest {
         };
     }
 
-    private String login(TestUsers user) {
+    private String login(String username, String password) {
         try {
             String body = mockMvc.perform(post("/api/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"username": "%s", "password": "%s"}""".formatted(user.username(), user.password())))
+                                    {"username": "%s", "password": "%s"}""".formatted(username, password)))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
             return JsonPath.read(body, "$.accessToken");
         } catch (Exception e) {
-            throw new IllegalStateException("Login failed for " + user, e);
+            throw new IllegalStateException("Login failed for " + username, e);
         }
     }
 

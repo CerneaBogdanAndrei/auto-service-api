@@ -36,7 +36,9 @@ final class DatabaseConstraints {
             Map.entry("fk_intervention_parts_part", new ConstraintError(ErrorCode.PART_IN_USE,
                     "The part is used by interventions and cannot be deleted.")),
             Map.entry("ex_appointments_vehicle_overlap", new ConstraintError(ErrorCode.APPOINTMENT_OVERLAP,
-                    "The vehicle already has an appointment in this interval."))
+                    "The vehicle already has an appointment in this interval.")),
+            Map.entry("ck_parts_stock", new ConstraintError(ErrorCode.INSUFFICIENT_STOCK,
+                    "Not enough parts in stock."))
     );
 
     private DatabaseConstraints() {

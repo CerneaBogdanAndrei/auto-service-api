@@ -148,6 +148,15 @@ public class AppointmentService {
         return appointmentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(RESOURCE, id));
     }
 
+    /**
+     * Loads the appointment with a shared row lock for the rest of the caller's transaction, so
+     * its status cannot change while interventions of it are being modified.
+     */
+    @Transactional
+    public Appointment lockForInterventionChanges(Long id) {
+        return appointmentRepository.findByIdForShare(id).orElseThrow(() -> new ResourceNotFoundException(RESOURCE, id));
+    }
+
     private Appointment getAppointmentWithVehicle(Long id) {
         return appointmentRepository.findWithVehicleById(id).orElseThrow(() -> new ResourceNotFoundException(RESOURCE, id));
     }

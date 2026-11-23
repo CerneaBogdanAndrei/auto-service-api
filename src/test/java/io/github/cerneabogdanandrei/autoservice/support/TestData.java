@@ -70,6 +70,14 @@ public final class TestData {
                 VALUES (?, ?, ?, ?)""", interventionId, partId, quantity, new BigDecimal(unitPrice));
     }
 
+    /** Another employee, with the same password as the seeded one ({@code Employee123!}). */
+    public long employee(String username) {
+        return jdbc.queryForObject("""
+                INSERT INTO users (username, password_hash, full_name, role)
+                SELECT ?, password_hash, 'Second Mechanic', 'EMPLOYEE' FROM users WHERE username = 'employee'
+                RETURNING id""", Long.class, username);
+    }
+
     public int stockOf(long partId) {
         return jdbc.queryForObject("SELECT stock FROM parts WHERE id = ?", Integer.class, partId);
     }

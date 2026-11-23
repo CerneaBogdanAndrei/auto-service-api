@@ -1,11 +1,13 @@
 package io.github.cerneabogdanandrei.autoservice.appointment;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
@@ -22,6 +24,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long>,
 
     @EntityGraph(attributePaths = "vehicle")
     Optional<Appointment> findWithVehicleById(Long id);
+
+    /**
+     * {@code SELECT ... FOR SHARE}: interventions can change concurrently with each other, but a
+     * status change of the appointment waits until they commit (and vice versa).
+     */
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select a from Appointment a where a.id = :id")
+    Optional<Appointment> findByIdForShare(Long id);
 
     /** Half-open intervals overlap when each one starts before the other ends. */
     @Query("""

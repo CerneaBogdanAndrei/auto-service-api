@@ -100,7 +100,8 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    private User getUser(Long id) {
+    /** Used by other features (e.g. interventions) to resolve a user. */
+    public User getUser(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(RESOURCE, id));
     }
 }
