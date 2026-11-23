@@ -1,0 +1,56 @@
+package io.github.cerneabogdanandrei.autoservice.common.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+
+/**
+ * Machine-readable error codes returned in the {@code code} property of every
+ * Problem Details response. Each code is bound to the HTTP status it is returned with.
+ */
+public enum ErrorCode {
+
+    // 400 — the request itself is invalid
+    VALIDATION_FAILED(HttpStatus.BAD_REQUEST),
+    MALFORMED_REQUEST(HttpStatus.BAD_REQUEST),
+    INVALID_PARAMETER(HttpStatus.BAD_REQUEST),
+
+    // 404 / 405 / 406 / 415 — protocol-level errors
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED),
+    NOT_ACCEPTABLE(HttpStatus.NOT_ACCEPTABLE),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE),
+
+    // 409 — the request conflicts with the current state of the system
+    CONCURRENT_MODIFICATION(HttpStatus.CONFLICT),
+    DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT),
+
+    // Fallbacks
+    REQUEST_REJECTED(HttpStatus.BAD_REQUEST),
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+
+    private final HttpStatus status;
+
+    ErrorCode(HttpStatus status) {
+        this.status = status;
+    }
+
+    public HttpStatus status() {
+        return status;
+    }
+
+    /**
+     * Code used for errors raised by the framework itself (e.g. an unsupported HTTP method),
+     * where only the status is known.
+     */
+    public static ErrorCode fromStatus(HttpStatusCode status) {
+        return switch (status.value()) {
+            case 400 -> MALFORMED_REQUEST;
+            case 404 -> RESOURCE_NOT_FOUND;
+            case 405 -> METHOD_NOT_ALLOWED;
+            case 406 -> NOT_ACCEPTABLE;
+            case 409 -> DATA_INTEGRITY_VIOLATION;
+            case 415 -> UNSUPPORTED_MEDIA_TYPE;
+            default -> status.is5xxServerError() ? INTERNAL_ERROR : REQUEST_REJECTED;
+        };
+    }
+}
