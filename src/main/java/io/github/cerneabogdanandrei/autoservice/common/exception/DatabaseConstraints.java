@@ -30,7 +30,11 @@ final class DatabaseConstraints {
             Map.entry("uq_vehicles_vin", new ConstraintError(ErrorCode.VIN_ALREADY_EXISTS,
                     "A vehicle with this VIN already exists.")),
             Map.entry("fk_appointments_vehicle", new ConstraintError(ErrorCode.VEHICLE_HAS_APPOINTMENTS,
-                    "The vehicle has appointments and cannot be deleted."))
+                    "The vehicle has appointments and cannot be deleted.")),
+            Map.entry("uq_parts_code", new ConstraintError(ErrorCode.PART_CODE_ALREADY_EXISTS,
+                    "A part with this code already exists.")),
+            Map.entry("fk_intervention_parts_part", new ConstraintError(ErrorCode.PART_IN_USE,
+                    "The part is used by interventions and cannot be deleted."))
     );
 
     private DatabaseConstraints() {
