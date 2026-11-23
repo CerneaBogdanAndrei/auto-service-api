@@ -48,6 +48,32 @@ jobs:
           -Daether.connector.http.retryHandler.count=6
           -Daether.connector.http.retryHandler.interval=10000
 
+      - name: Coverage summary
+        if: always()
+        run: |
+          summarize() {  # $1 = jacoco.csv, $2 = label, $3 = class-name filter (regex)
+            [ -f "$1" ] || return 0
+            awk -F, -v label="$2" -v filter="$3" 'NR > 1 && $3 ~ filter { missed += $8; covered += $9 }
+              END { if (missed + covered > 0) printf "| %s | %.1f%% |\n", label, 100 * covered / (missed + covered) }' "$1"
+          }
+          {
+            echo "### Line coverage"
+            echo "| Scope | Lines |"
+            echo "|---|---|"
+            summarize target/site/jacoco-unit/jacoco.csv "Service layer (unit tests, gated at 80%)" 'Service$'
+            summarize target/site/jacoco/jacoco.csv "Whole application (unit + integration tests)" '.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-reports
+          path: |
+            target/site/jacoco/
+            target/site/jacoco-unit/
+          retention-days: 14
+
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v7
