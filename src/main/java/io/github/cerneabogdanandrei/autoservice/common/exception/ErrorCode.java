@@ -28,6 +28,9 @@ public enum ErrorCode {
     // 409 — the request conflicts with the current state of the system
     CONCURRENT_MODIFICATION(HttpStatus.CONFLICT),
     DATA_INTEGRITY_VIOLATION(HttpStatus.CONFLICT),
+    USERNAME_ALREADY_EXISTS(HttpStatus.CONFLICT),
+    OWN_ACCOUNT_PROTECTED(HttpStatus.CONFLICT),
+    USER_HAS_INTERVENTIONS(HttpStatus.CONFLICT),
 
     // Fallbacks
     REQUEST_REJECTED(HttpStatus.BAD_REQUEST),

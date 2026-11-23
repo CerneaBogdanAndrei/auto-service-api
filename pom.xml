@@ -143,11 +143,19 @@
                             <version>${project.parent.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                    <compilerArgs>
-                        <arg>-Amapstruct.defaultComponentModel=spring</arg>
-                        <arg>-Amapstruct.unmappedTargetPolicy=ERROR</arg>
-                    </compilerArgs>
                 </configuration>
+                <executions>
+                    <!-- MapStruct options apply to main sources only (tests declare no mappers). -->
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>-Amapstruct.defaultComponentModel=spring</arg>
+                                <arg>-Amapstruct.unmappedTargetPolicy=ERROR</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Exposes the Mockito jar path as a property so it can be attached as a javaagent

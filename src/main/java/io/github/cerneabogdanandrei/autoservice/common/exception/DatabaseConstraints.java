@@ -20,7 +20,12 @@ final class DatabaseConstraints {
     private static final Pattern CONSTRAINT_NAME = Pattern.compile("constraint \"([^\"]+)\"");
 
     /** Known constraint names and the error they represent. Extended as features are added. */
-    private static final Map<String, ConstraintError> KNOWN_CONSTRAINTS = Map.of();
+    private static final Map<String, ConstraintError> KNOWN_CONSTRAINTS = Map.ofEntries(
+            Map.entry("uq_users_username", new ConstraintError(ErrorCode.USERNAME_ALREADY_EXISTS,
+                    "A user with this username already exists.")),
+            Map.entry("fk_interventions_assigned_user", new ConstraintError(ErrorCode.USER_HAS_INTERVENTIONS,
+                    "The user has assigned interventions and cannot be deleted; disable the account instead."))
+    );
 
     private DatabaseConstraints() {
     }
