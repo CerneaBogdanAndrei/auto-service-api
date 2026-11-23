@@ -30,6 +30,8 @@ spring:
       enabled: true
 
 app:
+  # Time zone the shop operates in: date filters and monthly reports use its calendar days.
+  business-time-zone: ${BUSINESS_TIME_ZONE:Europe/Bucharest}
   security:
     jwt:
       # Required; no default on purpose. At least 32 bytes, e.g. `openssl rand -base64 48`.

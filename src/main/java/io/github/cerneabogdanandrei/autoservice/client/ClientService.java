@@ -54,6 +54,7 @@ public class ClientService {
         }
         clientMapper.update(request, client);
         normalize(client, email);
+        clientRepository.flush();
         return clientMapper.toResponse(client);
     }
 

@@ -39,7 +39,13 @@ class ClientControllerIT extends AbstractIntegrationTest {
                 {"name": "John A. Doe", "phone": "0712345678", "email": "john.a.doe@example.com"}""")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("John A. Doe"))
-                .andExpect(jsonPath("$.email").value("john.a.doe@example.com"));
+                .andExpect(jsonPath("$.email").value("john.a.doe@example.com"))
+                .andExpect(result -> {
+                    String json = result.getResponse().getContentAsString();
+                    String createdAt = JsonPath.read(json, "$.createdAt");
+                    String updatedAt = JsonPath.read(json, "$.updatedAt");
+                    assertThat(java.time.Instant.parse(updatedAt)).isAfter(java.time.Instant.parse(createdAt));
+                });
 
         mockMvc.perform(get("/api/clients/{id}", id).with(as(TestUsers.OWNER)))
                 .andExpect(status().isOk())

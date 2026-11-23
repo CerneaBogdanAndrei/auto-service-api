@@ -67,6 +67,7 @@ public class PartService {
         }
         partMapper.update(request, part);
         normalize(part, code);
+        partRepository.flush();
         return partMapper.toResponse(part);
     }
 

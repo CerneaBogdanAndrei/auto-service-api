@@ -63,6 +63,7 @@ public class VehicleService {
         vehicleMapper.update(request, vehicle);
         vehicle.setClient(clientService.getClient(request.clientId()));
         normalize(vehicle, vin);
+        vehicleRepository.flush();
         return vehicleMapper.toResponse(vehicle);
     }
 

@@ -34,7 +34,9 @@ final class DatabaseConstraints {
             Map.entry("uq_parts_code", new ConstraintError(ErrorCode.PART_CODE_ALREADY_EXISTS,
                     "A part with this code already exists.")),
             Map.entry("fk_intervention_parts_part", new ConstraintError(ErrorCode.PART_IN_USE,
-                    "The part is used by interventions and cannot be deleted."))
+                    "The part is used by interventions and cannot be deleted.")),
+            Map.entry("ex_appointments_vehicle_overlap", new ConstraintError(ErrorCode.APPOINTMENT_OVERLAP,
+                    "The vehicle already has an appointment in this interval."))
     );
 
     private DatabaseConstraints() {

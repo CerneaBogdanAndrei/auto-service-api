@@ -73,6 +73,7 @@ public class UserService {
                     "You cannot disable or change the role of your own account.");
         }
         userMapper.update(request, user);
+        userRepository.flush();
         return userMapper.toResponse(user);
     }
 

@@ -37,6 +37,14 @@ class DatabaseConstraintsTest {
     }
 
     @Test
+    void knownConstraintsMapToTheirBusinessError() {
+        assertThat(DatabaseConstraints.errorFor("ex_appointments_vehicle_overlap"))
+                .hasValueSatisfying(error -> assertThat(error.code()).isEqualTo(ErrorCode.APPOINTMENT_OVERLAP));
+        assertThat(DatabaseConstraints.errorFor("uq_clients_email"))
+                .hasValueSatisfying(error -> assertThat(error.code()).isEqualTo(ErrorCode.EMAIL_ALREADY_EXISTS));
+    }
+
+    @Test
     void unknownOrMissingConstraintHasNoSpecificError() {
         assertThat(DatabaseConstraints.errorFor("does_not_exist")).isEmpty();
         assertThat(DatabaseConstraints.errorFor(null)).isEmpty();
