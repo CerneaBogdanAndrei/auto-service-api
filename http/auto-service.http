@@ -1,0 +1,386 @@
+# Auto Service API — every endpoint, in the order of a real workflow.
+#
+# IntelliJ IDEA HTTP Client: pick the "dev" environment (http-client.env.json) and run the file top
+# to bottom. Logins store their tokens and creates store the new ids for the requests that follow.
+# Unique values (VIN, email, part code) are random, so the file can be run repeatedly.
+# Credentials are the development seed users documented in the README.
+
+###############################################################################
+# Authentication
+###############################################################################
+
+### Log in as ADMIN
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{"username": "admin", "password": "Admin123!"}
+
+> {% client.global.set("adminToken", response.body.accessToken); %}
+
+### Log in as OWNER
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{"username": "owner", "password": "Owner123!"}
+
+> {% client.global.set("ownerToken", response.body.accessToken); %}
+
+### Log in as EMPLOYEE
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{"username": "employee", "password": "Employee123!"}
+
+> {% client.global.set("employeeToken", response.body.accessToken); %}
+
+### Who am I (stores the employee's id for assignments)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{employeeToken}}
+
+> {% client.global.set("employeeId", response.body.id); %}
+
+### Wrong password -> 401 INVALID_CREDENTIALS
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{"username": "owner", "password": "wrong"}
+
+### No token -> 401 UNAUTHORIZED
+GET {{baseUrl}}/api/clients
+
+###############################################################################
+# Users (ADMIN only)
+###############################################################################
+
+### List users (filters: role, enabled)
+GET {{baseUrl}}/api/users?role=EMPLOYEE&sort=username,asc
+Authorization: Bearer {{adminToken}}
+
+### Create a user
+POST {{baseUrl}}/api/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"username": "mechanic.{{$random.integer(1000, 9999)}}", "password": "Secret123!", "fullName": "Ion Mechanic", "role": "EMPLOYEE"}
+
+> {% client.global.set("userId", response.body.id); %}
+
+### Get a user
+GET {{baseUrl}}/api/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### Update name, role and status
+PUT {{baseUrl}}/api/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"fullName": "Ion Senior Mechanic", "role": "EMPLOYEE", "enabled": true}
+
+### Set a new password
+PUT {{baseUrl}}/api/users/{{userId}}/password
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{"password": "EvenBetter123!"}
+
+### Delete a user (no assigned interventions)
+DELETE {{baseUrl}}/api/users/{{userId}}
+Authorization: Bearer {{adminToken}}
+
+### OWNER cannot manage users -> 403 ACCESS_DENIED
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{ownerToken}}
+
+###############################################################################
+# Clients
+###############################################################################
+
+### Create a client
+POST {{baseUrl}}/api/clients
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"name": "Andrei Popescu", "phone": "+40 721 000 111", "email": "andrei.{{$random.integer(10000, 99999)}}@example.com"}
+
+> {% client.global.set("clientId", response.body.id); %}
+
+### List clients (paged and sorted)
+GET {{baseUrl}}/api/clients?page=0&size=20&sort=name,asc
+Authorization: Bearer {{employeeToken}}
+
+### Get a client
+GET {{baseUrl}}/api/clients/{{clientId}}
+Authorization: Bearer {{ownerToken}}
+
+### Update a client
+PUT {{baseUrl}}/api/clients/{{clientId}}
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"name": "Andrei M. Popescu", "phone": "0721000111", "email": "andrei.popescu.{{$random.integer(10000, 99999)}}@example.com"}
+
+### Invalid client -> 400 VALIDATION_FAILED with field errors
+POST {{baseUrl}}/api/clients
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"name": "", "phone": "call me", "email": "not-an-email"}
+
+###############################################################################
+# Vehicles
+###############################################################################
+
+### Register a vehicle for the client
+POST {{baseUrl}}/api/vehicles
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"clientId": {{clientId}}, "vin": "UU1HSDAG51{{$random.integer(1000000, 9999999)}}", "licensePlate": "B-77-POP",
+ "make": "Dacia", "model": "Logan", "manufactureYear": 2021}
+
+> {%
+    client.global.set("vehicleId", response.body.id);
+    client.global.set("vin", response.body.vin);
+%}
+
+### List the client's vehicles
+GET {{baseUrl}}/api/vehicles?clientId={{clientId}}
+Authorization: Bearer {{employeeToken}}
+
+### Get a vehicle
+GET {{baseUrl}}/api/vehicles/{{vehicleId}}
+Authorization: Bearer {{ownerToken}}
+
+### Update a vehicle (changing clientId would transfer it)
+PUT {{baseUrl}}/api/vehicles/{{vehicleId}}
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"clientId": {{clientId}}, "vin": "{{vin}}", "licensePlate": "B-77-POP",
+ "make": "Dacia", "model": "Logan MCV", "manufactureYear": 2021}
+
+### Invalid VIN (contains O) -> 400
+POST {{baseUrl}}/api/vehicles
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"clientId": {{clientId}}, "vin": "UU1HSDAG5O2345678", "licensePlate": "B-01-ABC",
+ "make": "Dacia", "model": "Sandero", "manufactureYear": 2020}
+
+###############################################################################
+# Parts
+###############################################################################
+
+### Add an oil filter to the catalogue
+POST {{baseUrl}}/api/parts
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"code": "FLT-{{$random.integer(10000, 99999)}}", "name": "Oil filter", "unitPrice": 49.90, "stock": 10}
+
+> {% client.global.set("filterId", response.body.id); %}
+
+### Add engine oil
+POST {{baseUrl}}/api/parts
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"code": "OIL-{{$random.integer(10000, 99999)}}", "name": "Engine oil 5W-30, 1 L", "unitPrice": 35.00, "stock": 3}
+
+> {%
+    client.global.set("oilId", response.body.id);
+    client.global.set("oilCode", response.body.code);
+%}
+
+### Parts running low (stock below 5)
+GET {{baseUrl}}/api/parts?stockBelow=5
+Authorization: Bearer {{employeeToken}}
+
+### Get a part
+GET {{baseUrl}}/api/parts/{{filterId}}
+Authorization: Bearer {{ownerToken}}
+
+### Update a part (stock adjustment)
+PUT {{baseUrl}}/api/parts/{{oilId}}
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"code": "{{oilCode}}", "name": "Engine oil 5W-30, 1 L", "unitPrice": 35.00, "stock": 5}
+
+###############################################################################
+# Appointments (ADMIN, OWNER)
+###############################################################################
+
+### Schedule tomorrow 07:00-09:00 UTC
+< {%
+    const start = new Date();
+    start.setUTCDate(start.getUTCDate() + 1);
+    start.setUTCHours(7, 0, 0, 0);
+    request.variables.set("startAt", start.toISOString());
+    request.variables.set("endAt", new Date(start.getTime() + 2 * 3600 * 1000).toISOString());
+%}
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"vehicleId": {{vehicleId}}, "startAt": "{{startAt}}", "endAt": "{{endAt}}", "notes": "Oil service"}
+
+> {%
+    client.global.set("appointmentId", response.body.id);
+    client.global.set("appointmentStart", response.body.startAt);
+    client.global.set("appointmentEnd", response.body.endAt);
+%}
+
+### Same slot again -> 409 APPOINTMENT_OVERLAP
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"vehicleId": {{vehicleId}}, "startAt": "{{appointmentStart}}", "endAt": "{{appointmentEnd}}"}
+
+### In the past -> 409 APPOINTMENT_IN_PAST
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"vehicleId": {{vehicleId}}, "startAt": "2020-01-10T09:00:00+02:00", "endAt": "2020-01-10T10:00:00+02:00"}
+
+### Reschedule (only while SCHEDULED): one hour later
+< {%
+    const start = new Date(client.global.get("appointmentStart"));
+    request.variables.set("newStart", new Date(start.getTime() + 3600 * 1000).toISOString());
+    request.variables.set("newEnd", new Date(start.getTime() + 3 * 3600 * 1000).toISOString());
+%}
+PUT {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"vehicleId": {{vehicleId}}, "startAt": "{{newStart}}", "endAt": "{{newEnd}}", "notes": "Oil service, moved by one hour"}
+
+### List by start-day range and status (days in the shop time zone)
+< {% request.variables.set("today", new Date().toISOString().slice(0, 10)); %}
+GET {{baseUrl}}/api/appointments?from={{today}}&status=SCHEDULED&sort=startAt,asc
+Authorization: Bearer {{ownerToken}}
+
+### Start work
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}/status
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"status": "IN_PROGRESS"}
+
+### Employees have no access to appointments -> 403
+GET {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{employeeToken}}
+
+###############################################################################
+# Interventions
+###############################################################################
+
+### Create an intervention for the employee, using two oil filters
+POST {{baseUrl}}/api/interventions
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"appointmentId": {{appointmentId}}, "assignedUserId": {{employeeId}}, "description": "Oil and filter change",
+ "laborCost": 150.00, "parts": [{"partId": {{filterId}}, "quantity": 2}]}
+
+> {% client.global.set("interventionId", response.body.id); %}
+
+### The employee adds the oil they used to their own intervention
+POST {{baseUrl}}/api/interventions/{{interventionId}}/parts
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{"partId": {{oilId}}, "quantity": 1}
+
+### More than in stock -> 409 INSUFFICIENT_STOCK (nothing changes)
+POST {{baseUrl}}/api/interventions/{{interventionId}}/parts
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{"partId": {{oilId}}, "quantity": 100}
+
+### The employee updates description and labour
+PUT {{baseUrl}}/api/interventions/{{interventionId}}
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{"description": "Oil and filter change, checked brakes", "laborCost": 180.00}
+
+### Employees only see their own interventions
+GET {{baseUrl}}/api/interventions
+Authorization: Bearer {{employeeToken}}
+
+### List an appointment's interventions
+GET {{baseUrl}}/api/interventions?appointmentId={{appointmentId}}
+Authorization: Bearer {{ownerToken}}
+
+### Intervention details with lines and totals
+GET {{baseUrl}}/api/interventions/{{interventionId}}
+Authorization: Bearer {{ownerToken}}
+
+### Remove a part (returns it to stock)
+DELETE {{baseUrl}}/api/interventions/{{interventionId}}/parts/{{oilId}}
+Authorization: Bearer {{employeeToken}}
+
+### Put it back
+POST {{baseUrl}}/api/interventions/{{interventionId}}/parts
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{"partId": {{oilId}}, "quantity": 1}
+
+### Finish the work
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}/status
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"status": "COMPLETED"}
+
+### Appointment with its cost: labour + Σ quantity × unit price
+GET {{baseUrl}}/api/appointments/{{appointmentId}}
+Authorization: Bearer {{ownerToken}}
+
+### Completed work is frozen -> 409 APPOINTMENT_NOT_IN_PROGRESS
+POST {{baseUrl}}/api/interventions/{{interventionId}}/parts
+Authorization: Bearer {{employeeToken}}
+Content-Type: application/json
+
+{"partId": {{filterId}}, "quantity": 1}
+
+### Invalid transition -> 409 INVALID_STATUS_TRANSITION
+PATCH {{baseUrl}}/api/appointments/{{appointmentId}}/status
+Authorization: Bearer {{ownerToken}}
+Content-Type: application/json
+
+{"status": "IN_PROGRESS"}
+
+###############################################################################
+# Reports (ADMIN, OWNER)
+###############################################################################
+
+### Revenue this year, in total and per month
+< {%
+    const year = new Date().getUTCFullYear();
+    request.variables.set("from", year + "-01-01");
+    request.variables.set("to", year + "-12-31");
+%}
+GET {{baseUrl}}/api/reports/revenue?from={{from}}&to={{to}}
+Authorization: Bearer {{ownerToken}}
+
+###############################################################################
+# Deletion rules
+###############################################################################
+
+### A client whose vehicles have appointments cannot be deleted -> 409 CLIENT_HAS_APPOINTMENTS
+DELETE {{baseUrl}}/api/clients/{{clientId}}
+Authorization: Bearer {{ownerToken}}
+
+### A vehicle with appointments cannot be deleted -> 409 VEHICLE_HAS_APPOINTMENTS
+DELETE {{baseUrl}}/api/vehicles/{{vehicleId}}
+Authorization: Bearer {{ownerToken}}
+
+### A part used by an intervention cannot be deleted -> 409 PART_IN_USE
+DELETE {{baseUrl}}/api/parts/{{filterId}}
+Authorization: Bearer {{ownerToken}}
