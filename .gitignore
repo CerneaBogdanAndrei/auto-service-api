@@ -32,3 +32,6 @@ logs/
 .env
 .env.local
 http/http-client.private.env.json
+
+# Claude Code personal overrides
+.claude/settings.local.json
