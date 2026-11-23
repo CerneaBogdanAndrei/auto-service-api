@@ -26,12 +26,27 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
+
+      # Unlike setup-java's built-in cache, restore-keys reuse the previous cache when pom.xml
+      # changes, so only new dependencies are downloaded (Maven Central rate-limits shared runners).
+      - name: Cache Maven repository
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.m2/wrapper
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml', '.mvn/wrapper/maven-wrapper.properties') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
 
       # Runs unit tests (Surefire) and integration tests (Failsafe + Testcontainers).
-      # Docker is available on GitHub-hosted Ubuntu runners.
+      # Docker is available on GitHub-hosted Ubuntu runners. The resolver retries
+      # 429/503 responses from Maven Central with a back-off instead of failing the build.
       - name: Build and run all tests
-        run: ./mvnw -B -ntp verify
+        run: >-
+          ./mvnw -B -ntp verify
+          -Daether.connector.http.retryHandler.count=6
+          -Daether.connector.http.retryHandler.interval=10000
 
       - name: Upload test reports
         if: failure()
