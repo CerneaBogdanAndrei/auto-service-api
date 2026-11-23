@@ -2,8 +2,9 @@ package io.github.cerneabogdanandrei.autoservice.auth;
 
 import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import io.github.cerneabogdanandrei.autoservice.common.security.AuthenticatedUser;
+import io.github.cerneabogdanandrei.autoservice.common.security.Role;
 import io.github.cerneabogdanandrei.autoservice.support.AbstractIntegrationTest;
-import io.github.cerneabogdanandrei.autoservice.user.Role;
 import io.github.cerneabogdanandrei.autoservice.user.User;
 import io.github.cerneabogdanandrei.autoservice.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -22,11 +23,11 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.web.servlet.ResultActions;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import javax.crypto.spec.SecretKeySpec;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -182,8 +183,8 @@ class AuthControllerIT extends AbstractIntegrationTest {
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
                 .subject("admin")
-                .claim(TokenService.USER_ID_CLAIM, 1L)
-                .claim(TokenService.ROLE_CLAIM, Role.ADMIN.name())
+                .claim(AuthenticatedUser.USER_ID_CLAIM, 1L)
+                .claim(AuthenticatedUser.ROLE_CLAIM, Role.ADMIN.name())
                 .build();
         return encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
                 .getTokenValue();

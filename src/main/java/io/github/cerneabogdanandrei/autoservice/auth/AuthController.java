@@ -3,6 +3,7 @@ package io.github.cerneabogdanandrei.autoservice.auth;
 import io.github.cerneabogdanandrei.autoservice.auth.dto.CurrentUserResponse;
 import io.github.cerneabogdanandrei.autoservice.auth.dto.LoginRequest;
 import io.github.cerneabogdanandrei.autoservice.auth.dto.TokenResponse;
+import io.github.cerneabogdanandrei.autoservice.common.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;

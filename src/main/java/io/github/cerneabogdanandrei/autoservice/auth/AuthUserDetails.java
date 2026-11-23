@@ -1,6 +1,6 @@
 package io.github.cerneabogdanandrei.autoservice.auth;
 
-import io.github.cerneabogdanandrei.autoservice.user.Role;
+import io.github.cerneabogdanandrei.autoservice.common.security.Role;
 import io.github.cerneabogdanandrei.autoservice.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

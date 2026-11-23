@@ -1,4 +1,4 @@
-package io.github.cerneabogdanandrei.autoservice.user;
+package io.github.cerneabogdanandrei.autoservice.common.security;
 
 /**
  * Application roles. Exposed to Spring Security as {@code ROLE_<name>} authorities.

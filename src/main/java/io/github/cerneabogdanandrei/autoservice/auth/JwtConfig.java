@@ -1,6 +1,7 @@
 package io.github.cerneabogdanandrei.autoservice.auth;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import io.github.cerneabogdanandrei.autoservice.common.security.AuthenticatedUser;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,9 +16,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
+import java.time.Clock;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.time.Clock;
 
 /**
  * Symmetric (HS256) JWT signing and verification using Spring Security's Nimbus support,
@@ -48,7 +49,7 @@ public class JwtConfig {
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-        authorities.setAuthoritiesClaimName(TokenService.ROLE_CLAIM);
+        authorities.setAuthoritiesClaimName(AuthenticatedUser.ROLE_CLAIM);
         authorities.setAuthorityPrefix("ROLE_");
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authorities);

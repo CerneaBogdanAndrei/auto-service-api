@@ -1,5 +1,6 @@
 package io.github.cerneabogdanandrei.autoservice.auth;
 
+import io.github.cerneabogdanandrei.autoservice.common.security.AuthenticatedUser;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;

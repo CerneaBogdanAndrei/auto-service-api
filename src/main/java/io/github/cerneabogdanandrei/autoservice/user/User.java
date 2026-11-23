@@ -1,6 +1,7 @@
 package io.github.cerneabogdanandrei.autoservice.user;
 
 import io.github.cerneabogdanandrei.autoservice.common.persistence.BaseEntity;
+import io.github.cerneabogdanandrei.autoservice.common.security.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,6 +1,7 @@
 package io.github.cerneabogdanandrei.autoservice.auth;
 
-import io.github.cerneabogdanandrei.autoservice.user.Role;
+import io.github.cerneabogdanandrei.autoservice.common.security.AuthenticatedUser;
+import io.github.cerneabogdanandrei.autoservice.common.security.Role;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;

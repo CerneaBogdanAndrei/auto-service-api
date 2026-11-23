@@ -1,6 +1,5 @@
-package io.github.cerneabogdanandrei.autoservice.auth;
+package io.github.cerneabogdanandrei.autoservice.common.security;
 
-import io.github.cerneabogdanandrei.autoservice.user.Role;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Objects;
@@ -12,6 +11,11 @@ import java.util.Objects;
  */
 public record AuthenticatedUser(Long id, String username, Role role) {
 
+    /** JWT claim holding the user's database id. */
+    public static final String USER_ID_CLAIM = "uid";
+    /** JWT claim holding the user's {@link Role}. */
+    public static final String ROLE_CLAIM = "role";
+
     public AuthenticatedUser {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(username, "username");
@@ -19,12 +23,11 @@ public record AuthenticatedUser(Long id, String username, Role role) {
     }
 
     public static AuthenticatedUser from(Jwt jwt) {
-        Object userId = jwt.getClaim(TokenService.USER_ID_CLAIM);
+        Object userId = jwt.getClaim(USER_ID_CLAIM);
         if (!(userId instanceof Number number)) {
-            throw new IllegalArgumentException("Access token has no numeric '%s' claim".formatted(TokenService.USER_ID_CLAIM));
+            throw new IllegalArgumentException("Access token has no numeric '%s' claim".formatted(USER_ID_CLAIM));
         }
-        return new AuthenticatedUser(number.longValue(), jwt.getSubject(),
-                Role.valueOf(jwt.getClaimAsString(TokenService.ROLE_CLAIM)));
+        return new AuthenticatedUser(number.longValue(), jwt.getSubject(), Role.valueOf(jwt.getClaimAsString(ROLE_CLAIM)));
     }
 
     public boolean hasRole(Role expected) {

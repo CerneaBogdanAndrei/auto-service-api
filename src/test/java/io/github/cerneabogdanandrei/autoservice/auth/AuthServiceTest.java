@@ -2,7 +2,7 @@ package io.github.cerneabogdanandrei.autoservice.auth;
 
 import io.github.cerneabogdanandrei.autoservice.auth.dto.LoginRequest;
 import io.github.cerneabogdanandrei.autoservice.auth.dto.TokenResponse;
-import io.github.cerneabogdanandrei.autoservice.user.Role;
+import io.github.cerneabogdanandrei.autoservice.common.security.Role;
 import io.github.cerneabogdanandrei.autoservice.user.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

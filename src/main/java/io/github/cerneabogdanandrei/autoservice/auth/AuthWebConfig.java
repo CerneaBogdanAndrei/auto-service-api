@@ -1,5 +1,6 @@
 package io.github.cerneabogdanandrei.autoservice.auth;
 
+import io.github.cerneabogdanandrei.autoservice.common.security.AuthenticatedUser;
 import org.springdoc.core.utils.SpringDocUtils;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
