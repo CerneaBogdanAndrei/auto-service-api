@@ -1,0 +1,40 @@
+# Local development stack: API + PostgreSQL.
+# Values can be overridden in a .env file (see .env.example); the defaults below
+# are local development credentials only, never use them in production.
+name: auto-service
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-autoservice}
+      POSTGRES_USER: ${DB_USERNAME:-autoservice}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-autoservice}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    image: auto-service-api:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-autoservice}
+      DB_USERNAME: ${DB_USERNAME:-autoservice}
+      DB_PASSWORD: ${DB_PASSWORD:-autoservice}
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+volumes:
+  postgres-data:
