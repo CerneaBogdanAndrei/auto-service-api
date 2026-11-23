@@ -24,7 +24,9 @@ final class DatabaseConstraints {
             Map.entry("uq_users_username", new ConstraintError(ErrorCode.USERNAME_ALREADY_EXISTS,
                     "A user with this username already exists.")),
             Map.entry("fk_interventions_assigned_user", new ConstraintError(ErrorCode.USER_HAS_INTERVENTIONS,
-                    "The user has assigned interventions and cannot be deleted; disable the account instead."))
+                    "The user has assigned interventions and cannot be deleted; disable the account instead.")),
+            Map.entry("uq_clients_email", new ConstraintError(ErrorCode.EMAIL_ALREADY_EXISTS,
+                    "A client with this email already exists."))
     );
 
     private DatabaseConstraints() {

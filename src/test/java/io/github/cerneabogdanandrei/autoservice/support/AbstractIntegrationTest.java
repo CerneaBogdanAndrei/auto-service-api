@@ -48,6 +48,8 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
+    protected TestData data;
+
     @DynamicPropertySource
     static void jwtSecret(DynamicPropertyRegistry registry) {
         registry.add("app.security.jwt.secret", () -> JWT_SECRET);
@@ -59,6 +61,7 @@ public abstract class AbstractIntegrationTest {
                 TRUNCATE intervention_parts, interventions, appointments, vehicles, clients, parts
                 RESTART IDENTITY""");
         jdbcTemplate.update("DELETE FROM users WHERE username NOT IN ('admin', 'owner', 'employee')");
+        data = new TestData(jdbcTemplate);
     }
 
     /** Logs in through the real endpoint; tokens are cached per user for the whole test run. */
