@@ -14,6 +14,11 @@ public enum ErrorCode {
     MALFORMED_REQUEST(HttpStatus.BAD_REQUEST),
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST),
 
+    // 401 / 403 — authentication and authorization
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN),
+
     // 404 / 405 / 406 / 415 — protocol-level errors
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED),
@@ -27,6 +32,9 @@ public enum ErrorCode {
     // Fallbacks
     REQUEST_REJECTED(HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
+
+    /** Shared by the security filter chain and method security so both 403s read the same. */
+    public static final String ACCESS_DENIED_DETAIL = "You do not have permission to perform this action.";
 
     private final HttpStatus status;
 
@@ -45,6 +53,8 @@ public enum ErrorCode {
     public static ErrorCode fromStatus(HttpStatusCode status) {
         return switch (status.value()) {
             case 400 -> MALFORMED_REQUEST;
+            case 401 -> UNAUTHORIZED;
+            case 403 -> ACCESS_DENIED;
             case 404 -> RESOURCE_NOT_FOUND;
             case 405 -> METHOD_NOT_ALLOWED;
             case 406 -> NOT_ACCEPTABLE;

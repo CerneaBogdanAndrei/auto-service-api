@@ -11,6 +11,8 @@ class ErrorCodeTest {
     @ParameterizedTest
     @CsvSource({
             "400, MALFORMED_REQUEST",
+            "401, UNAUTHORIZED",
+            "403, ACCESS_DENIED",
             "404, RESOURCE_NOT_FOUND",
             "405, METHOD_NOT_ALLOWED",
             "406, NOT_ACCEPTABLE",

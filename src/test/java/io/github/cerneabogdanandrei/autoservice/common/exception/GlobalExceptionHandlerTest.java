@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,11 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.http.MediaType;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,7 +54,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // controllers = ... keeps the real application controllers out of this slice;
 // the nested test controller itself is not picked up by scanning, so it is imported.
+// Security filters are disabled: this test covers the MVC exception mapping only
+// (the security filter chain is covered by the integration tests).
 @WebMvcTest(controllers = GlobalExceptionHandlerTest.SampleController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import({
         GlobalExceptionHandlerTest.SampleController.class,
         ProblemDetailFactory.class,
@@ -201,6 +210,45 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
     }
 
+    @Test
+    void accessDeniedInsideControllerReturns403() throws Exception {
+        mockMvc.perform(get("/test/access-denied"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"))
+                .andExpect(jsonPath("$.detail").value(ErrorCode.ACCESS_DENIED_DETAIL));
+    }
+
+    @Test
+    void badCredentialsReturn401InvalidCredentials() throws Exception {
+        mockMvc.perform(get("/test/bad-credentials"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.detail").value("Invalid username or password."));
+    }
+
+    @Test
+    void disabledAccountIsReportedExactlyLikeBadCredentials() throws Exception {
+        mockMvc.perform(get("/test/disabled"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.detail").value("Invalid username or password."));
+    }
+
+    @Test
+    void missingAuthenticationReturns401Unauthorized() throws Exception {
+        mockMvc.perform(get("/test/no-authentication"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+    }
+
+    @Test
+    void infrastructureFailureDuringAuthenticationReturns500() throws Exception {
+        mockMvc.perform(get("/test/auth-infrastructure-failure"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+                .andExpect(content().string(not(containsString("database down"))));
+    }
+
     // ------------------------------------------------------------------ test fixtures
 
     @TestConfiguration
@@ -270,6 +318,31 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/boom")
         String boom() {
             throw new IllegalStateException("secret internals");
+        }
+
+        @GetMapping("/access-denied")
+        String accessDenied() {
+            throw new AccessDeniedException("Access Denied");
+        }
+
+        @GetMapping("/bad-credentials")
+        String badCredentials() {
+            throw new BadCredentialsException("Bad credentials");
+        }
+
+        @GetMapping("/disabled")
+        String disabled() {
+            throw new DisabledException("User is disabled");
+        }
+
+        @GetMapping("/no-authentication")
+        String noAuthentication() {
+            throw new AuthenticationCredentialsNotFoundException("No authentication");
+        }
+
+        @GetMapping("/auth-infrastructure-failure")
+        String authInfrastructureFailure() {
+            throw new InternalAuthenticationServiceException("database down");
         }
     }
 }

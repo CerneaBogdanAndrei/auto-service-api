@@ -17,6 +17,11 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.lang.Nullable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AccountStatusException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -105,6 +110,32 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "Unknown property '%s'.".formatted(ex.getPropertyName()), request.getRequestURI()));
     }
 
+    // ------------------------------------------------------------------ security raised inside MVC
+
+    /** 403 from method security ({@code @PreAuthorize}) or ownership checks in services. */
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        return respond(problems.create(ErrorCode.ACCESS_DENIED, ErrorCode.ACCESS_DENIED_DETAIL,
+                request.getRequestURI()));
+    }
+
+    /**
+     * 401 for failed logins. Unknown users, wrong passwords and disabled accounts all get the
+     * same answer so the endpoint cannot be used to discover which usernames exist.
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<ProblemDetail> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        if (ex instanceof InternalAuthenticationServiceException) {
+            return handleUnexpected(ex, request);
+        }
+        if (ex instanceof BadCredentialsException || ex instanceof AccountStatusException) {
+            return respond(problems.create(ErrorCode.INVALID_CREDENTIALS, "Invalid username or password.",
+                    request.getRequestURI()));
+        }
+        return respond(problems.create(ErrorCode.UNAUTHORIZED,
+                "Authentication is required to access this resource.", request.getRequestURI()));
+    }
+
     // ------------------------------------------------------------------ validation outside MVC binding
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -147,7 +178,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                             HttpHeaders headers,
                                                                             HttpStatusCode status,
                                                                             WebRequest request) {
-        List<ValidationError> errors = ex.getAllValidationResults().stream()
+        List<ValidationError> errors = ex.getParameterValidationResults().stream()
                 .flatMap(result -> result.getResolvableErrors().stream()
                         .map(error -> new ValidationError(parameterName(result), error.getDefaultMessage())))
                 .sorted(BY_FIELD_THEN_MESSAGE)

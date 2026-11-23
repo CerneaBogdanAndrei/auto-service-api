@@ -144,9 +144,9 @@ class SchemaMigrationIT extends AbstractIntegrationTest {
 
     @Test
     void rejectsDuplicateUsernameIgnoringCase() {
-        insertUser("employee", "EMPLOYEE");
+        insertUser("mechanic", "EMPLOYEE");
 
-        assertViolates("uq_users_username", () -> insertUser("Employee", "EMPLOYEE"));
+        assertViolates("uq_users_username", () -> insertUser("Mechanic", "EMPLOYEE"));
     }
 
     @Test
@@ -165,7 +165,7 @@ class SchemaMigrationIT extends AbstractIntegrationTest {
     void deletingInterventionRemovesItsPartLines() {
         long vehicleId = insertVehicle(insertClient("a@example.com"), VALID_VIN);
         long appointmentId = insertAppointment(vehicleId, T10, T11, "IN_PROGRESS");
-        long interventionId = insertIntervention(appointmentId, insertUser("employee", "EMPLOYEE"));
+        long interventionId = insertIntervention(appointmentId, insertUser("mechanic", "EMPLOYEE"));
         long partId = insertPart("FLT-001", 5);
         jdbc.update("""
                 INSERT INTO intervention_parts (intervention_id, part_id, quantity, unit_price)
@@ -181,7 +181,7 @@ class SchemaMigrationIT extends AbstractIntegrationTest {
     void partUsedByAnInterventionCannotBeDeleted() {
         long vehicleId = insertVehicle(insertClient("a@example.com"), VALID_VIN);
         long appointmentId = insertAppointment(vehicleId, T10, T11, "IN_PROGRESS");
-        long interventionId = insertIntervention(appointmentId, insertUser("employee", "EMPLOYEE"));
+        long interventionId = insertIntervention(appointmentId, insertUser("mechanic", "EMPLOYEE"));
         long partId = insertPart("FLT-001", 5);
         jdbc.update("""
                 INSERT INTO intervention_parts (intervention_id, part_id, quantity, unit_price)

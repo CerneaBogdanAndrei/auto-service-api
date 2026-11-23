@@ -33,6 +33,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-autoservice}
       DB_USERNAME: ${DB_USERNAME:-autoservice}
       DB_PASSWORD: ${DB_PASSWORD:-autoservice}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is not set - create a .env file, see .env.example}
     ports:
       - "${API_PORT:-8080}:8080"
 
