@@ -26,7 +26,11 @@ final class DatabaseConstraints {
             Map.entry("fk_interventions_assigned_user", new ConstraintError(ErrorCode.USER_HAS_INTERVENTIONS,
                     "The user has assigned interventions and cannot be deleted; disable the account instead.")),
             Map.entry("uq_clients_email", new ConstraintError(ErrorCode.EMAIL_ALREADY_EXISTS,
-                    "A client with this email already exists."))
+                    "A client with this email already exists.")),
+            Map.entry("uq_vehicles_vin", new ConstraintError(ErrorCode.VIN_ALREADY_EXISTS,
+                    "A vehicle with this VIN already exists.")),
+            Map.entry("fk_appointments_vehicle", new ConstraintError(ErrorCode.VEHICLE_HAS_APPOINTMENTS,
+                    "The vehicle has appointments and cannot be deleted."))
     );
 
     private DatabaseConstraints() {

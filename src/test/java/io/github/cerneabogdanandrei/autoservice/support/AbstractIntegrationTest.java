@@ -1,6 +1,7 @@
 package io.github.cerneabogdanandrei.autoservice.support;
 
 import com.jayway.jsonpath.JsonPath;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -48,7 +49,12 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
+
     protected TestData data;
+
+    protected QueryCounter queries;
 
     @DynamicPropertySource
     static void jwtSecret(DynamicPropertyRegistry registry) {
@@ -62,6 +68,7 @@ public abstract class AbstractIntegrationTest {
                 RESTART IDENTITY""");
         jdbcTemplate.update("DELETE FROM users WHERE username NOT IN ('admin', 'owner', 'employee')");
         data = new TestData(jdbcTemplate);
+        queries = new QueryCounter(entityManagerFactory);
     }
 
     /** Logs in through the real endpoint; tokens are cached per user for the whole test run. */
